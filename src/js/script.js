@@ -12,14 +12,41 @@ const getDataExercise = async (exercise) => {
     getExercise(dataExercises)
 }
 
-const getExercise= async (dataExerciseJson)=> {
+const translateExercise = async (instructions, name, subtitle) => {
+    try {
+        const dataTranslate = await fetch('http://localhost:5000/translate', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                q: instructions,
+                source: 'en',
+                target: "pt-BR",
+                format: "text",
+            }),
+
+        })
+        const exerciseTranslate = await dataTranslate.json();
+        getTranslateData(exerciseTranslate, name, subtitle)
+
+    }
+    catch (error) {
+        console.error('Erro na tradução')
+    }
+}
+const getExercise = async (dataExerciseJson) => {
     const dataExercise = await dataExerciseJson
-    dataExercise.forEach(exercise=> {
-        createExerciseElement(exercise.muscle, exercise.name, exercise.instructions )
+    dataExercise.forEach(exercise => {
+        translateExercise(exercise.instructions, exercise.name, exercise.muscle)
+        // createExerciseElement(exercise.muscle, exercise.name, exercise.instructions )
     });
+
+}
+const getTranslateData = async (instructionsTranslate, name, subtitle)=> {
+    const translateInstruction = await instructionsTranslate
+     createExerciseElement(subtitle, name, translateInstruction.translatedText)
     
 }
-const createExerciseElement = (subtitle, title, description)=>{
+const createExerciseElement = (subtitle, title, instruction) => {
     const exerciseBox = document.createElement('div')
     exerciseBox.classList.add('exercise-card')
     const subtitleBox = document.createElement('p')
@@ -31,11 +58,11 @@ const createExerciseElement = (subtitle, title, description)=>{
     titleBox.textContent = title
     exerciseBox.appendChild(titleBox)
 
-    const descriptionBox = document.createElement('p')
-    descriptionBox.classList.add('description')
-    descriptionBox.textContent = description
-    exerciseBox.appendChild(descriptionBox)
-    
+    const instructionBox = document.createElement('p')
+    instructionBox.classList.add('instruction')
+    instructionBox.textContent = instruction
+    exerciseBox.appendChild(instructionBox)
+
     resultExercise.appendChild(exerciseBox)
 }
 btnSearch.addEventListener('click', (e) => {
